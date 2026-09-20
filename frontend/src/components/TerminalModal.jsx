@@ -181,21 +181,21 @@ ${profile?.summary || "Aspiring web developer specialized in Python, JavaScript,
         whileTap={{ scale: 0.95 }}
         style={{
           position: "fixed",
-          bottom: "24px",
-          right: "24px",
+          bottom: "clamp(16px, 3vw, 24px)",
+          right: "clamp(16px, 3vw, 24px)",
           zIndex: 9980,
           display: "flex",
           alignItems: "center",
-          gap: "10px",
-          background: "rgba(3, 7, 18, 0.85)",
+          gap: "8px",
+          background: "rgba(3, 7, 18, 0.88)",
           backdropFilter: "blur(12px)",
           border: "1px solid rgba(0, 243, 255, 0.4)",
-          padding: "10px 18px",
+          padding: "clamp(8px, 1.8vw, 10px) clamp(12px, 2.5vw, 18px)",
           borderRadius: "9999px",
           color: "#00f3ff",
-          fontSize: "0.82rem",
+          fontSize: "clamp(0.72rem, 2vw, 0.82rem)",
           fontWeight: 700,
-          letterSpacing: "0.15em",
+          letterSpacing: "0.14em",
           cursor: "pointer",
           boxShadow: "0 0 24px rgba(0, 243, 255, 0.25)",
         }}
@@ -203,6 +203,7 @@ ${profile?.summary || "Aspiring web developer specialized in Python, JavaScript,
         <span style={{ color: "#00f3ff", fontSize: "0.95rem" }}>&gt;_</span>
         <span>TERMINAL</span>
         <span
+          className="hidden sm:inline-block"
           style={{
             fontSize: "0.65rem",
             padding: "2px 6px",
@@ -230,8 +231,8 @@ ${profile?.summary || "Aspiring web developer specialized in Python, JavaScript,
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
-              padding: "20px",
-              background: "rgba(0, 0, 0, 0.75)",
+              padding: "16px",
+              background: "rgba(0, 0, 0, 0.8)",
               backdropFilter: "blur(10px)",
             }}
             onClick={(e) => {
@@ -246,8 +247,8 @@ ${profile?.summary || "Aspiring web developer specialized in Python, JavaScript,
               style={{
                 width: "100%",
                 maxWidth: "720px",
-                height: "460px",
-                background: "rgba(5, 9, 15, 0.95)",
+                height: "clamp(350px, 75vh, 480px)",
+                background: "rgba(5, 9, 15, 0.96)",
                 border: "1px solid rgba(0, 243, 255, 0.35)",
                 borderRadius: "14px",
                 boxShadow: "0 0 45px rgba(0, 243, 255, 0.2)",

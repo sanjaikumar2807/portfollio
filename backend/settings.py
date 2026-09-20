@@ -1,6 +1,10 @@
 from pathlib import Path
+import os
+from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+load_dotenv(BASE_DIR / '.env')  # loads .env from project root
+
 
 SECRET_KEY = 'django-insecure-y!igp12$&_ztcq)@r#1ecj(g@2@*tz_e=vb5()xk75%t$sz7o6'
 DEBUG = True
@@ -69,3 +73,14 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 CORS_ALLOW_ALL_ORIGINS = True
+
+# ─── Gmail SMTP Email Configuration ────────────────────────────────────────
+# Set these environment variables OR replace the strings directly for local dev
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'sanjaikumar1135@gmail.com')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', '')  # Use Gmail App Password
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
+CONTACT_RECEIVER_EMAIL = 'sanjaikumar1135@gmail.com'

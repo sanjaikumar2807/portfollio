@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import React, { useState, useRef } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import axios from "axios";
 import SectionTitle from "./SectionTitle";
 import { sounds } from "../utils/soundEffects";
@@ -8,8 +8,9 @@ const API_BASE = "http://127.0.0.1:8000/api";
 
 export default function ContactSection({ profile }) {
   const [formData, setFormData] = useState({ name: "", email: "", message: "" });
-  const [status, setStatus] = useState("idle"); // idle | sending | success | error
+  const [status, setStatus]     = useState("idle"); // idle | sending | success | error
   const [statusMsg, setStatusMsg] = useState("");
+  const [focusedField, setFocusedField] = useState(null);
 
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }));
@@ -17,48 +18,140 @@ export default function ContactSection({ profile }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.name || !formData.email || !formData.message) return;
+    if (!formData.name.trim() || !formData.email.trim() || !formData.message.trim()) return;
 
-    sounds.playClick();
+    sounds.playClick?.();
     setStatus("sending");
     setStatusMsg("");
 
+    // ── Try Django backend (sends real email to sanjaikumar1135@gmail.com) ──
     try {
-      const res = await axios.post(`${API_BASE}/contact/`, formData);
-      sounds.playSuccess();
+      await axios.post(`${API_BASE}/contact/`, formData);
+      sounds.playSuccess?.();
       setStatus("success");
-      setStatusMsg(res.data.message || "Message transmitted successfully! Sanjai will reply soon.");
+      setStatusMsg("✅ Message transmitted successfully! Sanjai will reply soon.");
       setFormData({ name: "", email: "", message: "" });
-    } catch (err) {
-      console.error("Contact error:", err);
+      return;
+    } catch (apiErr) {
+      console.warn("Backend unavailable, trying mailto fallback:", apiErr);
+    }
+
+    // ── Fallback: open mailto link ──────────────────────────────────────────
+    try {
+      const subject = encodeURIComponent(`Portfolio Contact from ${formData.name}`);
+      const body    = encodeURIComponent(
+        `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
+      );
+      window.open(
+        `mailto:${profile?.email || "sanjaikumar1135@gmail.com"}?subject=${subject}&body=${body}`,
+        "_blank"
+      );
+      setStatus("success");
+      setStatusMsg("📬 Your email client opened — please hit Send to complete the transmission!");
+      setFormData({ name: "", email: "", message: "" });
+    } catch {
       setStatus("error");
-      setStatusMsg("Connection timed out. You can email directly to sanjaikumar1135@gmail.com.");
+      setStatusMsg(
+        `❌ Could not send. Email directly: ${profile?.email || "sanjaikumar1135@gmail.com"}`
+      );
     }
   };
 
-  return (
-    <section id="contact" style={{ position: "relative", zIndex: 1, padding: "120px 24px 80px", maxWidth: "1100px", margin: "0 auto" }}>
-      <SectionTitle number="04" title="Contact Me" subtitle="Sanjaikumar S" />
+  const inputBase = {
+    width: "100%",
+    padding: "14px 16px",
+    background: "rgba(255,255,255,0.04)",
+    borderRadius: "10px",
+    color: "white",
+    outline: "none",
+    fontSize: "0.95rem",
+    transition: "border-color 0.25s, box-shadow 0.25s, background 0.25s",
+    boxSizing: "border-box",
+    fontFamily: "inherit",
+  };
 
-      <div style={{ display: "grid", gridTemplateColumns: "1fr 1.2fr", gap: "40px" }} className="md:grid-cols-2 grid-cols-1">
-        {/* Left Side: Direct Contact Details & Availability */}
+  const inputStyle = (field) => ({
+    ...inputBase,
+    border: focusedField === field
+      ? "1px solid #00f3ff"
+      : "1px solid rgba(255,255,255,0.12)",
+    boxShadow: focusedField === field
+      ? "0 0 18px rgba(0,243,255,0.18)"
+      : "none",
+    background: focusedField === field
+      ? "rgba(0,243,255,0.04)"
+      : "rgba(255,255,255,0.04)",
+  });
+
+  const contactCards = [
+    {
+      icon: "📍",
+      label: "Location",
+      value: profile?.location || "Ramapuram, Tamil Nadu",
+      href: null,
+    },
+    {
+      icon: "✉️",
+      label: "Email",
+      value: profile?.email || "sanjaikumar1135@gmail.com",
+      href: `mailto:${profile?.email || "sanjaikumar1135@gmail.com"}`,
+      cyan: true,
+    },
+    {
+      icon: "📞",
+      label: "Phone",
+      value: profile?.phone || "+91 8015501005",
+      href: `tel:${(profile?.phone || "+918015501005").replace(/\s/g, "")}`,
+    },
+    {
+      icon: "💼",
+      label: "LinkedIn",
+      value: "linkedin.com/in/sanjai-kumar",
+      href: profile?.linkedin || "https://www.linkedin.com/in/sanjai-kumar-71b78a326/",
+      cyan: true,
+    },
+    {
+      icon: "🐙",
+      label: "GitHub",
+      value: "github.com/sanjaikumar2807",
+      href: profile?.github || "https://github.com/sanjaikumar2807",
+    },
+  ];
+
+  return (
+    <section
+      id="contact"
+      style={{
+        position: "relative",
+        zIndex: 1,
+        padding: "clamp(70px, 10vw, 120px) clamp(16px, 4vw, 24px) 80px",
+        maxWidth: "1100px",
+        margin: "0 auto",
+      }}
+    >
+      <SectionTitle number="04" title="Contact Me" subtitle="Send a Message Directly" />
+
+      <div className="responsive-contact-grid">
+        {/* ── Left: Info Panel ─────────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, x: -50 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
-          style={{ display: "flex", flexDirection: "column", gap: "24px" }}
+          style={{ display: "flex", flexDirection: "column", gap: "20px" }}
         >
+          {/* Main Card */}
           <div
             style={{
-              background: "rgba(3, 7, 18, 0.75)",
+              background: "rgba(3, 7, 18, 0.78)",
               border: "1px solid rgba(0, 243, 255, 0.2)",
-              borderRadius: "16px",
-              padding: "32px",
-              backdropFilter: "blur(12px)",
+              borderRadius: "18px",
+              padding: "clamp(20px, 4vw, 32px)",
+              backdropFilter: "blur(14px)",
             }}
           >
-            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "16px" }}>
+            {/* Live dot */}
+            <div style={{ display: "flex", alignItems: "center", gap: "10px", marginBottom: "18px" }}>
               <div
                 style={{
                   width: "10px",
@@ -66,55 +159,112 @@ export default function ContactSection({ profile }) {
                   borderRadius: "50%",
                   background: "#00f3ff",
                   boxShadow: "0 0 12px #00f3ff",
+                  animation: "pulse-glow 2s ease-in-out infinite",
                 }}
               />
-              <span style={{ fontSize: "0.75rem", fontWeight: 700, color: "#00f3ff", letterSpacing: "0.2em", textTransform: "uppercase" }}>
-                Active & Ready to Connect
+              <span
+                style={{
+                  fontSize: "0.72rem",
+                  fontWeight: 700,
+                  color: "#00f3ff",
+                  letterSpacing: "0.2em",
+                  textTransform: "uppercase",
+                }}
+              >
+                Active &amp; Ready to Connect
               </span>
             </div>
 
-            <h3 style={{ fontSize: "1.8rem", fontWeight: 900, marginBottom: "14px", letterSpacing: "-0.02em" }}>
-              Let's Build Something <span style={{ color: "#00f3ff" }}>Extraordinary.</span>
+            <h3
+              style={{
+                fontSize: "1.75rem",
+                fontWeight: 900,
+                marginBottom: "12px",
+                letterSpacing: "-0.02em",
+                lineHeight: 1.2,
+              }}
+            >
+              Let's Build Something{" "}
+              <span style={{ color: "#00f3ff" }}>Extraordinary.</span>
             </h3>
 
-            <p style={{ color: "rgba(255,255,255,0.65)", fontSize: "0.95rem", lineHeight: 1.7, marginBottom: "28px" }}>
-              Interested in fullstack web development, frontend engineering, or collaboration on ambitious projects? Drop a message right here.
+            <p
+              style={{
+                color: "rgba(255,255,255,0.6)",
+                fontSize: "0.9rem",
+                lineHeight: 1.75,
+                marginBottom: "28px",
+              }}
+            >
+              Fill the form — your message goes straight to my Gmail inbox. 
+              Open to fullstack roles, collaborations, and ambitious builds.
             </p>
 
-            {/* Quick Cards */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <span style={{ fontSize: "1.2rem" }}>📍</span>
-                <div>
-                  <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Location</div>
-                  <div style={{ fontWeight: 600, fontSize: "0.9rem" }}>{profile?.location || "Ramapuram, Tamil Nadu"}</div>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <span style={{ fontSize: "1.2rem" }}>✉️</span>
-                <div>
-                  <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Direct Email</div>
-                  <a href={`mailto:${profile?.email || "sanjaikumar1135@gmail.com"}`} style={{ color: "#00f3ff", fontWeight: 600, fontSize: "0.9rem", textDecoration: "none" }}>
-                    {profile?.email || "sanjaikumar1135@gmail.com"}
-                  </a>
-                </div>
-              </div>
-
-              <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
-                <span style={{ fontSize: "1.2rem" }}>📞</span>
-                <div>
-                  <div style={{ fontSize: "0.7rem", color: "rgba(255,255,255,0.4)", textTransform: "uppercase" }}>Phone</div>
-                  <a href={`tel:${profile?.phone || "+918015501005"}`} style={{ color: "white", fontWeight: 600, fontSize: "0.9rem", textDecoration: "none" }}>
-                    {profile?.phone || "+91 8015501005"}
-                  </a>
-                </div>
-              </div>
+            {/* Contact info rows */}
+            <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+              {contactCards.map(({ icon, label, value, href, cyan }) => (
+                <motion.div
+                  key={label}
+                  style={{ display: "flex", alignItems: "center", gap: "14px" }}
+                  whileHover={{ x: 4 }}
+                  transition={{ duration: 0.2 }}
+                >
+                  <div
+                    style={{
+                      width: "38px",
+                      height: "38px",
+                      borderRadius: "10px",
+                      background: "rgba(0,243,255,0.08)",
+                      border: "1px solid rgba(0,243,255,0.15)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontSize: "1rem",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {icon}
+                  </div>
+                  <div>
+                    <div
+                      style={{
+                        fontSize: "0.67rem",
+                        color: "rgba(255,255,255,0.38)",
+                        textTransform: "uppercase",
+                        letterSpacing: "0.12em",
+                        marginBottom: "2px",
+                      }}
+                    >
+                      {label}
+                    </div>
+                    {href ? (
+                      <a
+                        href={href}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: cyan ? "#00f3ff" : "white",
+                          fontWeight: 600,
+                          fontSize: "0.88rem",
+                          textDecoration: "none",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        {value}
+                      </a>
+                    ) : (
+                      <span style={{ color: "white", fontWeight: 600, fontSize: "0.88rem" }}>
+                        {value}
+                      </span>
+                    )}
+                  </div>
+                </motion.div>
+              ))}
             </div>
           </div>
         </motion.div>
 
-        {/* Right Side: Interactive Transmission Form */}
+        {/* ── Right: Contact Form ───────────────────────────── */}
         <motion.div
           initial={{ opacity: 0, x: 50 }}
           whileInView={{ opacity: 1, x: 0 }}
@@ -124,19 +274,39 @@ export default function ContactSection({ profile }) {
           <form
             onSubmit={handleSubmit}
             style={{
-              background: "rgba(3, 7, 18, 0.75)",
+              background: "rgba(3, 7, 18, 0.78)",
               border: "1px solid rgba(0, 243, 255, 0.2)",
-              borderRadius: "16px",
-              padding: "36px",
-              backdropFilter: "blur(12px)",
+              borderRadius: "18px",
+              padding: "clamp(20px, 4vw, 36px)",
+              backdropFilter: "blur(14px)",
               display: "flex",
               flexDirection: "column",
               gap: "20px",
             }}
           >
+            <div style={{ marginBottom: "4px" }}>
+              <p style={{ fontSize: "0.7rem", color: "rgba(0,243,255,0.7)", letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 700 }}>
+                📡 Message Transmission Panel
+              </p>
+              <p style={{ fontSize: "0.82rem", color: "rgba(255,255,255,0.45)", marginTop: "4px" }}>
+                Your message will be delivered directly to my Gmail inbox.
+              </p>
+            </div>
+
+            {/* Name */}
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "8px" }}>
-                Your Name
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.72rem",
+                  color: "rgba(255,255,255,0.55)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  marginBottom: "8px",
+                  fontWeight: 700,
+                }}
+              >
+                Your Name *
               </label>
               <input
                 type="text"
@@ -145,114 +315,140 @@ export default function ContactSection({ profile }) {
                 onChange={handleChange}
                 placeholder="e.g. Sanjaikumar S"
                 required
-                style={{
-                  width: "100%",
-                  padding: "14px 16px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "8px",
-                  color: "white",
-                  outline: "none",
-                  fontSize: "0.95rem",
-                  transition: "border-color 0.2s",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "#00f3ff")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.12)")}
+                style={inputStyle("name")}
+                onFocus={() => setFocusedField("name")}
+                onBlur={() => setFocusedField(null)}
               />
             </div>
 
+            {/* Email */}
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "8px" }}>
-                Your Email
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.72rem",
+                  color: "rgba(255,255,255,0.55)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  marginBottom: "8px",
+                  fontWeight: 700,
+                }}
+              >
+                Your Email *
               </label>
               <input
                 type="email"
                 name="email"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="e.g. sanjaikumar1135@gmail.com"
+                placeholder="e.g. yourname@gmail.com"
                 required
-                style={{
-                  width: "100%",
-                  padding: "14px 16px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "8px",
-                  color: "white",
-                  outline: "none",
-                  fontSize: "0.95rem",
-                  transition: "border-color 0.2s",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "#00f3ff")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.12)")}
+                style={inputStyle("email")}
+                onFocus={() => setFocusedField("email")}
+                onBlur={() => setFocusedField(null)}
               />
             </div>
 
+            {/* Message */}
             <div>
-              <label style={{ display: "block", fontSize: "0.75rem", color: "rgba(255,255,255,0.6)", textTransform: "uppercase", letterSpacing: "0.15em", marginBottom: "8px" }}>
-                Message
+              <label
+                style={{
+                  display: "block",
+                  fontSize: "0.72rem",
+                  color: "rgba(255,255,255,0.55)",
+                  textTransform: "uppercase",
+                  letterSpacing: "0.15em",
+                  marginBottom: "8px",
+                  fontWeight: 700,
+                }}
+              >
+                Message *
               </label>
               <textarea
                 name="message"
                 value={formData.message}
                 onChange={handleChange}
-                rows={4}
-                placeholder="Let's talk about building something cool..."
+                rows={5}
+                placeholder="Let's talk about building something extraordinary..."
                 required
-                style={{
-                  width: "100%",
-                  padding: "14px 16px",
-                  background: "rgba(255,255,255,0.04)",
-                  border: "1px solid rgba(255,255,255,0.12)",
-                  borderRadius: "8px",
-                  color: "white",
-                  outline: "none",
-                  fontSize: "0.95rem",
-                  resize: "vertical",
-                  transition: "border-color 0.2s",
-                }}
-                onFocus={(e) => (e.target.style.borderColor = "#00f3ff")}
-                onBlur={(e) => (e.target.style.borderColor = "rgba(255,255,255,0.12)")}
+                style={{ ...inputStyle("message"), resize: "vertical" }}
+                onFocus={() => setFocusedField("message")}
+                onBlur={() => setFocusedField(null)}
               />
             </div>
 
-            {statusMsg && (
-              <div
-                style={{
-                  padding: "12px 16px",
-                  borderRadius: "8px",
-                  fontSize: "0.85rem",
-                  background: status === "success" ? "rgba(0, 243, 255, 0.1)" : "rgba(255, 77, 109, 0.1)",
-                  border: status === "success" ? "1px solid #00f3ff" : "1px solid #ff4d6d",
-                  color: status === "success" ? "#00f3ff" : "#ff4d6d",
-                }}
-              >
-                {statusMsg}
-              </div>
-            )}
+            {/* Status Banner */}
+            <AnimatePresence>
+              {statusMsg && (
+                <motion.div
+                  key="status"
+                  initial={{ opacity: 0, y: -8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.97 }}
+                  style={{
+                    padding: "12px 16px",
+                    borderRadius: "10px",
+                    fontSize: "0.86rem",
+                    fontWeight: 600,
+                    background:
+                      status === "success"
+                        ? "rgba(0, 243, 255, 0.08)"
+                        : "rgba(255, 77, 109, 0.08)",
+                    border:
+                      status === "success"
+                        ? "1px solid rgba(0,243,255,0.35)"
+                        : "1px solid rgba(255,77,109,0.35)",
+                    color: status === "success" ? "#00f3ff" : "#ff4d6d",
+                  }}
+                >
+                  {statusMsg}
+                </motion.div>
+              )}
+            </AnimatePresence>
 
+            {/* Submit */}
             <motion.button
               type="submit"
               disabled={status === "sending"}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+              whileHover={{ scale: status !== "sending" ? 1.02 : 1 }}
+              whileTap={{ scale: status !== "sending" ? 0.97 : 1 }}
               style={{
-                marginTop: "6px",
+                marginTop: "2px",
                 padding: "16px",
-                background: "linear-gradient(135deg, #00f3ff 0%, #0066cc 100%)",
+                background:
+                  status === "sending"
+                    ? "linear-gradient(135deg, #005577 0%, #003366 100%)"
+                    : "linear-gradient(135deg, #00f3ff 0%, #0066cc 100%)",
                 border: "none",
-                borderRadius: "8px",
-                color: "#030712",
+                borderRadius: "10px",
+                color: status === "sending" ? "rgba(255,255,255,0.5)" : "#030712",
                 fontWeight: 800,
                 fontSize: "0.9rem",
                 letterSpacing: "0.15em",
                 textTransform: "uppercase",
                 cursor: status === "sending" ? "not-allowed" : "pointer",
-                boxShadow: "0 0 24px rgba(0, 243, 255, 0.35)",
+                boxShadow:
+                  status !== "sending" ? "0 0 28px rgba(0, 243, 255, 0.35)" : "none",
+                transition: "all 0.3s ease",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "8px",
               }}
             >
-              {status === "sending" ? "SENDING..." : "SEND MESSAGE"}
+              {status === "sending" ? (
+                <>
+                  <span style={{ display: "inline-block", animation: "spin 1s linear infinite" }}>⏳</span>
+                  TRANSMITTING...
+                </>
+              ) : (
+                <>🚀 SEND TO GMAIL</>
+              )}
             </motion.button>
+
+            <p style={{ textAlign: "center", fontSize: "0.7rem", color: "rgba(255,255,255,0.25)", marginTop: "-8px" }}>
+              Delivered to sanjaikumar1135@gmail.com
+            </p>
           </form>
         </motion.div>
       </div>

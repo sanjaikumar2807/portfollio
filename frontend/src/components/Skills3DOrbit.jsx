@@ -90,7 +90,7 @@ export default function Skills3DOrbit() {
     <div
       style={{
         width: "100%",
-        height: "440px",
+        height: "clamp(280px, 48vw, 440px)",
         position: "relative",
         borderRadius: "16px",
         overflow: "hidden",
@@ -98,6 +98,7 @@ export default function Skills3DOrbit() {
         border: "1px solid rgba(0, 243, 255, 0.2)",
         boxShadow: "inset 0 0 40px rgba(0, 243, 255, 0.05)",
         marginBottom: "48px",
+        touchAction: "pan-y",
       }}
     >
       <div
@@ -116,7 +117,7 @@ export default function Skills3DOrbit() {
           </span>
         </div>
         <p style={{ fontSize: "0.78rem", color: "rgba(255,255,255,0.45)", margin: "4px 0 0 16px" }}>
-          Drag to rotate • Scroll to zoom
+          Drag to rotate constellation
         </p>
       </div>
 
@@ -144,7 +145,7 @@ export default function Skills3DOrbit() {
         ))}
 
         <OrbitControls
-          enableZoom={true}
+          enableZoom={false}
           enablePan={false}
           maxDistance={8}
           minDistance={3.5}

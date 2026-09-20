@@ -67,7 +67,7 @@ export default function ResumeModal({ isOpen, onClose, profile, skills, projects
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
               <span style={{ fontSize: "1.1rem" }}>📄</span>
               <span style={{ fontWeight: 800, letterSpacing: "0.15em", color: "#00f3ff", fontSize: "0.85rem", textTransform: "uppercase" }}>
-                Curriculum Vitae • Holographic Preview
+                CV Preview
               </span>
             </div>
 
@@ -113,16 +113,16 @@ export default function ResumeModal({ isOpen, onClose, profile, skills, projects
             style={{
               flex: 1,
               overflowY: "auto",
-              padding: "36px 40px",
+              padding: "clamp(20px, 4vw, 36px) clamp(16px, 4vw, 40px)",
               display: "flex",
               flexDirection: "column",
-              gap: "28px",
+              gap: "24px",
               fontFamily: "'Space Grotesk', sans-serif",
             }}
           >
             {/* Top Identity */}
-            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "20px" }}>
-              <h1 style={{ fontSize: "2.2rem", fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 6px 0", color: "#00f3ff" }}>
+            <div style={{ borderBottom: "1px solid rgba(255,255,255,0.1)", paddingBottom: "18px" }}>
+              <h1 style={{ fontSize: "clamp(1.5rem, 5vw, 2.2rem)", fontWeight: 900, letterSpacing: "-0.02em", margin: "0 0 6px 0", color: "#00f3ff" }}>
                 {profile?.name || "SANJAIKUMAR S"}
               </h1>
               <p style={{ fontSize: "1rem", color: "rgba(255,255,255,0.7)", margin: "0 0 12px 0" }}>

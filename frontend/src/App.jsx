@@ -142,10 +142,10 @@ function App() {
       <HeroSection profile={profile} />
 
       {/* ===== ABOUT + EDUCATION ===== */}
-      <section id="about" style={{ position: "relative", zIndex: 1, padding: "120px 24px", maxWidth: "1100px", margin: "0 auto" }}>
+      <section id="about" style={{ position: "relative", zIndex: 1, padding: "clamp(70px, 10vw, 120px) clamp(16px, 4vw, 24px)", maxWidth: "1100px", margin: "0 auto" }}>
         <SectionTitle number="01" title="About Me" subtitle="The Person Behind the Code" />
 
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "32px" }} className="md:grid-cols-2 grid-cols-1">
+        <div className="responsive-grid-2">
           {/* About Card */}
           <motion.div
             className="about-card"
@@ -174,7 +174,7 @@ function App() {
               {profile.summary}
             </p>
 
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "16px", marginBottom: "28px" }}>
+            <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(130px, 1fr))", gap: "16px", marginBottom: "28px" }}>
               {[
                 { label: "Location", value: profile.location },
                 { label: "Email", value: profile.email, cyan: true },
@@ -272,13 +272,13 @@ function App() {
       </section>
 
       {/* ===== SKILLS (3D ORBIT + BADGES) ===== */}
-      <section id="skills" style={{ position: "relative", zIndex: 1, padding: "120px 24px", maxWidth: "1100px", margin: "0 auto" }}>
+      <section id="skills" style={{ position: "relative", zIndex: 1, padding: "clamp(70px, 10vw, 120px) clamp(16px, 4vw, 24px)", maxWidth: "1100px", margin: "0 auto" }}>
         <SectionTitle number="02" title="Technical Skills" subtitle="Skills & 3D Constellation" />
         <Skills3DOrbit />
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "repeat(auto-fill, minmax(160px, 1fr))",
+            gridTemplateColumns: "repeat(auto-fill, minmax(clamp(130px, 22vw, 160px), 1fr))",
             gap: "16px",
           }}
         >
@@ -289,9 +289,9 @@ function App() {
       </section>
 
       {/* ===== FEATURED WORK ===== */}
-      <section id="projects" style={{ position: "relative", zIndex: 1, padding: "120px 24px", maxWidth: "1100px", margin: "0 auto" }}>
+      <section id="projects" style={{ position: "relative", zIndex: 1, padding: "clamp(70px, 10vw, 120px) clamp(16px, 4vw, 24px)", maxWidth: "1100px", margin: "0 auto" }}>
         <SectionTitle number="03" title="Projects" subtitle="Engineered Systems & Applications" />
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(480px, 1fr))", gap: "28px" }}>
+        <div className="responsive-projects-grid">
           {projects.map((proj, i) => (
             <ProjectCard key={i} project={proj} index={i} />
           ))}
@@ -302,7 +302,7 @@ function App() {
       <ContactSection profile={profile} />
 
       {/* ===== FOOTER ===== */}
-      <footer style={{ position: "relative", zIndex: 1, padding: "48px 24px 80px", textAlign: "center" }}>
+      <footer style={{ position: "relative", zIndex: 1, padding: "48px clamp(16px, 4vw, 24px) 80px", textAlign: "center" }}>
         <div className="footer-line" style={{ marginBottom: "24px" }} />
         <p style={{ fontSize: "0.75rem", color: "rgba(255,255,255,0.4)", letterSpacing: "0.2em", textTransform: "uppercase" }}>
           © {new Date().getFullYear()} {profile.name} • Fullstack & AI Systems • Crafted with Antigravity
